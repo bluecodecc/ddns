@@ -43,6 +43,7 @@ def get_record_id():
     req = models.DescribeRecordListRequest()
     req.Domain = config.configs['ddns']['domain']
     resp = client.DescribeRecordList(req)
+    global logger
     logger.info(resp.to_json_string())
     record_list = json.loads(resp.to_json_string())['RecordList']
     record_list_filter = list(filter(lambda x: x['Name'] == config.configs['ddns']['subDomain'], record_list))
@@ -67,12 +68,14 @@ def update_record(public_ip):
         req.TTL = config.configs['ddns']['TTL']
         req.MX = 0
         resp = client.ModifyRecord(req)
+        global logger
         logger.info(resp.to_json_string())
 
 
 def get_public_ip():
     res = {}
     ipv4 = requests.get('https://api.ipify.org').text.strip()
+    global logger
     logger.info('ipv4: ' + ipv4)
     res['A'] = ipv4
     ipv6 = requests.get('https://api64.ipify.org').text.strip()
