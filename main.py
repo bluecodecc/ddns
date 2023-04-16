@@ -16,6 +16,7 @@ logger: logging.Logger
 
 
 def init():
+    init_log()
     configs = config.configs['ddns']
     cred = credential.Credential(configs['secretId'], configs['secretKey'])
     global client
@@ -25,8 +26,6 @@ def init():
         recordId = configs['recordId']
     else:
         get_record_id()
-    init_log()
-
 
 def init_log():
     global logger
