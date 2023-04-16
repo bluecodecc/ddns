@@ -12,6 +12,7 @@ import time
 client: dnspod_client.DnspodClient
 recordId: dict = {}
 lastPublicIp: dict = {}
+logger: logging.Logger
 
 
 def init():
@@ -24,14 +25,25 @@ def init():
         recordId = configs['recordId']
     else:
         get_record_id()
-    logging.basicConfig(filename='logger.log', level=logging.INFO)
+    init_log()
+
+
+def init_log():
+    global logger
+    logger = logging.getLogger('ddns')
+    logger.setLevel(logging.INFO)
+    fh = logging.FileHandler('ddns.log')
+    fh.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
 
 
 def get_record_id():
     req = models.DescribeRecordListRequest()
     req.Domain = config.configs['ddns']['domain']
     resp = client.DescribeRecordList(req)
-    logging.info(resp.to_json_string())
+    logger.info(resp.to_json_string())
     record_list = json.loads(resp.to_json_string())['RecordList']
     record_list_filter = list(filter(lambda x: x['Name'] == config.configs['ddns']['subDomain'], record_list))
     global recordId
@@ -55,16 +67,16 @@ def update_record(public_ip):
         req.TTL = config.configs['ddns']['TTL']
         req.MX = 0
         resp = client.ModifyRecord(req)
-        logging.info(resp.to_json_string())
+        logger.info(resp.to_json_string())
 
 
 def get_public_ip():
     res = {}
     ipv4 = requests.get('https://api.ipify.org').text.strip()
-    logging.info('ipv4: ' + ipv4)
+    logger.info('ipv4: ' + ipv4)
     res['A'] = ipv4
     ipv6 = requests.get('https://api64.ipify.org').text.strip()
-    logging.info('ipv6: ' + ipv6)
+    logger.info('ipv6: ' + ipv6)
     if ipv6 == ipv4:
         return res
     res['AAAA'] = ipv6
